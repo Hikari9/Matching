@@ -5,7 +5,7 @@
 		dense
 		recursive
 	
-	/data.py
+	/data
 		read
 		write
 		split
@@ -14,9 +14,9 @@
 		clean
 		
 	/text
-		suffix.py
+		/suffix
 			array
 			trie
-		dictionary.py
+		/dictionary
 		
 		
