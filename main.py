@@ -51,10 +51,10 @@ def flatten(list_of_lists):
 	result = []
 	for entry in list_of_lists:
 		if isinstance(entry, list):
-			res.extend(flatten(entry))
+			result.extend(flatten(entry))
 		else:
-			res.append(entry)
-	return res
+			result.append(entry)
+	return result
 
 # gets a list of unique entries with a split parameter
 def smash(data, delimiters = '&/'):

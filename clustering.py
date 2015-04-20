@@ -209,5 +209,27 @@ def label_heirarchy(tree, verbose = True):
 	
 	
 	return (label[id], list(zip(label, child)))
+
+from nltk.stem.snowball import EnglishStemmer
+_stemmer = EnglishStemmer(True)
+
+# Cluster based on stem wording and word frequency
+def stem_cluster(data, mode = 10, length_at_least = 3, stemmer = _stemmer):
+	import main
+	from collections import defaultdict
 	
+	words = main.flatten(main.split(data, ' '))
+	frequency = defaultdict(int)
+	for word in words:
+		frequency[word] += 1
 	
+	words = filter(lambda (word,freq): freq >= mode and len(word) >= length_at_least and word not in stemmer.stopwords, frequency.items())
+	words.sort(key=lambda pair: pair[1], reverse=True)
+	words = list(zip(*words)[0])
+	
+	stem_map = defaultdict(list)
+	stem = stemmer.stem
+	for word in words:
+		stem_map[stem(word)].append(word)
+	
+	return map(lambda rep: min(rep, key=len), stem_map.values())
