@@ -21,15 +21,12 @@ def write(data, filename = 'out.txt', verbose = False):
 	
 
 # acquire a list of approved words from a list of data
-from nltk.corpus import words as _all_dictionary_words
-import clean
-_all_words = set(map(clean.to_uppercase, _all_dictionary_words.words()))
-
-def approved_words(list_of_data, length_at_least = 5, dictionary = _all_words):
+import enchant
+def approved_words(list_of_data, length_at_least = 5, dictionary = enchant.Dict('en-US')):
 	approved = set()
 	for row in split(list_of_data, ' '):
 		for word in row:
-			if word.isalpha() and len(word) >= length_at_least and word in dictionary:
+			if word.isalpha() and len(word) >= length_at_least and dictionary.check(word):
 				approved.add(word)
 	return approved
 	
