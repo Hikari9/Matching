@@ -1,0 +1,17 @@
+/matching
+	
+	/clustering
+	
+	/datacleaning
+		read
+		write
+		
+		
+		
+	
+	/stringprocessing
+		/suffix
+			array
+			trie
+		
+		

@@ -1,0 +1,22 @@
+/matching
+	
+	/clustering
+		lattice
+		dense
+		recursive
+	
+	/data.py
+		split
+		flatten
+		smash
+		clean			
+		read
+		write
+		
+	/text
+		suffix.py
+			array
+			trie
+		dictionary.py
+		
+		
