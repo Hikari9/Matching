@@ -4,14 +4,13 @@
 		lattice
 		dense
 		recursive
-	
-	/data
-		read
-		write
-		split
-		flatten
-		smash
-		clean
+
+	read
+	write
+	split
+	flatten
+	smash
+	clean
 		
 	/text
 		/suffix
@@ -19,4 +18,4 @@
 			trie
 		/dictionary
 		
-		
+	
