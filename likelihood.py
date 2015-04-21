@@ -7,10 +7,10 @@ import pandas as pd
 # initializes a likelihood data frame based on row and column labels.
 # Performs a content-based filtering technique using features.
 # vectorizer can be 'tfidf' or 'count'
-def likelihood_matrix(row_labels, column_labels, vectorizer='tfidf', ngram_range=(2,3)):
+def likelihood_matrix(row_labels, column_labels, vectorizer='tfidf', ngram_range=(3,4)):
 
 	rows = len(row_labels)
-	columns = len(column_labels)	
+	columns = len(column_labels)
 	
 	# start vectorizing
 	from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -38,13 +38,13 @@ def likelihood_matrix(row_labels, column_labels, vectorizer='tfidf', ngram_range
 	
 	matrix = cosine_similarity(row_vectors, column_vectors)
 	
+	
 	# create pandas data frame object
 	data_frame = pd.DataFrame(matrix, index=row_labels, columns=column_labels)
 	
+	
 	# append attributes
 	
-	data_frame.row_labels = row_labels
-	data_frame.column_labels = column_labels
 	data_frame.unique_labels = unique_labels
 	data_frame.row_vectors = row_vectors
 	data_frame.column_vectors = column_vectors
@@ -53,6 +53,8 @@ def likelihood_matrix(row_labels, column_labels, vectorizer='tfidf', ngram_range
 	data_frame.vectorizer = vectorizer
 	data_frame.row_similarity_cache = {}
 	data_frame.column_similarity_cache = {}
+	
+	# normalize data frame
 	
 	return data_frame
 
@@ -104,6 +106,8 @@ def delta_likelihood(data_frame, user_row, user_column):
 	
 	# combine computations by multiplying
 	matrix = np.matrix(row_similarities) * np.matrix(column_similarities)
-	return pd.DataFrame(matrix, index=df.row_labels, columns=df.column_labels)
+	
+	data_frame = pd.DataFrame(matrix, index=df.index, columns=df.columns)
+	return data_frame
 	
 	
