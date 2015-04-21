@@ -4,19 +4,18 @@
 		lattice
 		dense
 		recursive
-	
-	/data.py
-		split
-		flatten
-		smash
-		clean			
-		read
-		write
+
+	read
+	write
+	split
+	flatten
+	smash
+	clean
 		
 	/text
-		suffix.py
+		/suffix
 			array
 			trie
-		dictionary.py
+		/dictionary
 		
-		
+	

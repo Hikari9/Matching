@@ -209,11 +209,11 @@ course_filters = [
 		(remove_ampersand = True),
 	remove_year,
 	remove_prefixes
-		('data/course_prefixes.txt'),
+		('config/course_prefixes.txt'),
 	transform_abbreviations
-		('data/course_abbreviations.txt'),
+		('config/course_abbreviations.txt'),
 	transform_separators
-		('data/course_prefixes.txt', delimiter = '/'),
+		('config/course_prefixes.txt', delimiter = '/'),
 	remove_duplicate_words,
 	remove_special_characters
 		(remove_ampersand = True)
@@ -226,7 +226,7 @@ industry_filters = [
 		(remove_ampersand = False),
 	remove_year,
 	transform_abbreviations
-		('data/industry_abbreviations.txt'),
+		('config/industry_abbreviations.txt'),
 	remove_duplicate_words,
 	remove_special_characters
 		(remove_ampersand = False)

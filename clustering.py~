@@ -234,7 +234,7 @@ def stem_cluster(data, mode = 10, length_at_least = 3, stemmer = None):
 	stem = stemmer.stem
 	for word in words:
 		# special case
-		if word != 'THE' and word != 'YEAR':
+		if word != 'THE':
 			stem_map[stem(word.lower()).upper()].append(word)
 	
 	return map(lambda rep: min(rep, key=len), stem_map.values())
