@@ -1,3 +1,10 @@
+
+# to do: map caching with operations
+#			(eg) dot product must cache row/column vectors appropriately
+#	   : make caching toggle-able
+#	   : apply pickling
+
+
 # create likelihood (labelled pandas) matrix
 # vectorizer can be 'tfidf' or 'count'
 
@@ -45,19 +52,81 @@ def likelihood_matrix(row_labels, column_labels, vectorizer='tfidf', ngram_range
 	
 	# append attributes
 	
-	data_frame.unique_labels = unique_labels
-	data_frame.row_vectors = row_vectors
-	data_frame.column_vectors = column_vectors
-	data_frame.features = features
-	data_frame.vector_cache = vector_cache
-	data_frame.vectorizer = vectorizer
-	data_frame.row_similarity_cache = {}
-	data_frame.column_similarity_cache = {}
+	# data_frame.has_cache = True
+	data_frame.unique_labels = unique_labels # recalculate on dot
+	data_frame.row_vectors = row_vectors # recalculate on dot
+	data_frame.column_vectors = column_vectors # recalculate on dot
+	data_frame.features = features # recalculate on dot
+	data_frame.vector_cache = vector_cache # recalculate on dot
+	data_frame.vectorizer = vectorizer # recalculate on dot
+	data_frame.row_similarity_cache = {} # keep on dot
+	data_frame.column_similarity_cache = {} # swap on dots
 	
 	# normalize data frame
 	
 	return data_frame
 
+# clones attributes from first dataframe to next
+def copy_dataframe_cache(origin_data_frame, destination_data_frame):
+	self = origin_data_frame
+	other = destination_data_frame
+	
+	if self.shape != other.shape:
+		raise 'Dimensions should be the same!\nExpected: ' + self.shape + '\nFound: ' + other.shape
+	
+	# other.has_cache = self.has_cache
+	other.unique_labels = self.unique_labels
+	other.row_vectors = self.row_vectors
+	other.column_vectors = self.column_vectors
+	other.features = self.features
+	other.vector_cache = self.vector_cache
+	other.vectorizer = self.vectorizer
+	other.row_similarity_cache = self.row_similarity_cache
+	other.column_similarity_cache = self.column_similarity_cache
+
+
+
+# extract features of a text in a form of a
+# vector with respect to the labels in the data frame
+def extract_features(data_frame, text):
+	df = data_frame
+	if text in df.vector_cache: 
+		vector = df.vector_cache[text]
+	else:
+		vector = df.vectorizer.transform([text]).toarray()[0]
+		df.vector_cache[text] = vector
+	return vector
+
+
+
+
+# returns the vector of similarity such that
+# a certain text has features similar to corresponding
+# set of labels
+def similarity_vector(data_frame, text, use_row_labels = True):
+	
+	from sklearn.metrics.pairwise import cosine_similarity as cosines
+	
+	df = data_frame
+	cache = df.row_similarity_cache if use_row_labels else df.column_similarity_cache
+	
+	#check first if exists in cache for performance
+	if text in cache:
+		similarities = cache[text]
+	else:
+		text_features = extract_features(df, text)
+		
+		if use_row_labels: # downward vector
+			X, Y = df.row_vectors, [text_features]
+			
+		else: # righward vector
+			X, Y = [text_features], df.column_vectors
+			
+		similarities = cosines(X, Y)
+		cache[text] = similarities
+	
+	return similarities
+	
 
 # computes delta likelihood using the following steps: (non-verbatim)
 # clabels = df.column_labels
@@ -65,49 +134,20 @@ def likelihood_matrix(row_labels, column_labels, vectorizer='tfidf', ngram_range
 # vr = [cos_similarity(ur, label) for label in rlabels]
 # vc = [cos_similarity(vr, label) for label in clabels]
 # dL = vr * vc^T
-
 def delta_likelihood(data_frame, user_row, user_column):
 	
-	df = data_frame
-	row_vectors = df.row_vectors
-	column_vectors = df.column_vectors
-	
-	def get_vector(text):
-		if text in df.vector_cache: 
-			vector = df.vector_cache[text]
-		else:
-			vector = df.vectorizer.transform([text]).toarray()[0]
-			df.vector_cache[text] = vector
-		return vector
-		
-	# get cosine similarities from user data to corresponding labels
-	from sklearn.metrics.pairwise import cosine_similarity
-	
-	# check first if exists in cache for performance
-	if user_row in df.row_similarity_cache:
-		row_similarities = df.row_similarity_cache[user_row]
-	else:
-		user_row_vector = get_vector(user_row)
-		# untransposed vector matrix
-		row_similarities = cosine_similarity(row_vectors, [user_row_vector])
-		# add back to cache
-		df.row_similarity_cache[user_row] = row_similarities
-	
-	# do the same for columns
-	if user_column in df.column_similarity_cache:
-		column_similarities = df.column_similarity_cache[user_column]
-	else:
-		user_column_vector = get_vector(user_column)
-		# transposed vector matrix
-		column_similarities = cosine_similarity([user_column_vector], column_vectors)
-		# add back to cache
-		df.column_similarity_cache[user_column] = column_similarities
-	
+	# get similarity vectors
+	# note: row similarities is downward while column_similarities is righward
+	row_similarities = similarity_vector(data_frame, user_row, use_row_labels=True)
+	column_similarities = similarity_vector(data_frame, user_column, use_row_labels=False)
 	
 	# combine computations by multiplying
 	matrix = np.matrix(row_similarities) * np.matrix(column_similarities)
+	delta = pd.DataFrame(matrix, index=df.index, columns=df.columns)
 	
-	data_frame = pd.DataFrame(matrix, index=df.index, columns=df.columns)
-	return data_frame
+	# make sure both data frames has the same cache
+	copy_dataframe_cache(data_frame, delta)
+	
+	return delta
 	
 	
