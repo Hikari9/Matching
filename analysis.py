@@ -73,8 +73,8 @@ class likelihood_matrix(object):
 	'''
 	Find Matches
 		- a vector of quantified matches on opposite axis
-		- returns the matrix product between
-			similarity vector and likelihood matrix
+		- equivalent to SV1^T * LM (on_rows)
+		- equivalent to LM * SV2^T (not on_rows)
 		- one can return a dataframe for readability
 	'''
 	
@@ -104,6 +104,28 @@ class likelihood_matrix(object):
 	
 	def find_column_matches(self, text, with_labels = True, percentage = True):
 		return self.find_matches(text, on_rows=False, with_labels=with_labels, percentage=percentage)
+	
+	
+	'''
+	Add Match
+		- updates the matrix count by adding the delta
+		- uses frequency-based collaborative filtering
+	'''
+	
+	def add_match(self, row_text, column_text):
+		self.dataframe += self.delta(row_text, column_text)
+	
+	'''
+	Recommendation Score
+		- obtain a quantified score of two labels
+		- equivalent to SV1^T * LM * SV2^T
+	'''
+	
+	def recommendation_score(self, row_text, column_text):
+		row_similarities = self.similarity_vector(row_text, on_rows=True, with_labels=False, percentage=True)
+		column_similarities = self.similarity_vector(column_text, on_rows=False, with_labels=False, percentage=False)
+		return row_similarities.T.dot(self.dataframe).dot(column_similarities.T)[0][0]
+		
 	
 	'''
 	Features Vector
@@ -135,6 +157,7 @@ class likelihood_matrix(object):
 	
 	def similarity_vector(self, text, on_rows = True, with_labels = True, percentage = False):
 		
+		# function to process parameter options
 		def process(similarities):
 			if with_labels:
 				similarities = similarities.reshape(similarities.shape[0] * similarities.shape[1])
@@ -164,7 +187,7 @@ class likelihood_matrix(object):
 		if on_rows: # downward vector
 			X, Y = self.row_vectors, [text_features]
 		
-		else:
+		else: # rightward vector
 			X, Y = [text_features], self.column_vectors
 		
 		cache = self.row_similarity_cache if on_rows else self.column_similarity_cache
@@ -183,6 +206,7 @@ class likelihood_matrix(object):
 			the values returned by the matrix
 		- computes delta likelihood matrix by multiplying
 			the similarity vectors of two samples from both axes
+		- equivalent to SV1 * SV2
 	'''
 	
 	def delta(self, row_text, column_text, with_labels = True):
@@ -194,7 +218,6 @@ class likelihood_matrix(object):
 		
 		#combine computations by multiplying
 		matrix = np.dot(row_similarities, column_similarities)
-		matrix = matrix.reshape(matrix.shape[0] * matrix.shape[1])
 		
 		if with_labels:
 			return pd.DataFrame(matrix, index=self.rows, columns=self.columns)
@@ -205,7 +228,17 @@ class likelihood_matrix(object):
 	'''
 	Combining of Matrices
 		- to derive combined likelihood, matrices are multiplied
+		- note that matrix multiplication rules apply
 	'''
+	
+	def __mul__(self, other):
+		if isinstance(other, likelihood_matrix):
+			product = likelihood_matrix(self.rows, other.columns)
+			product.dataframe += self.dataframe.dot(other.dataframe)
+			return product
+		else:
+			raise TypeError('Can only with multiply likelihood_matrix')
+	
 	
 	'''
 	Copy
