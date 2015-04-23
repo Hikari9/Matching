@@ -1,7 +1,5 @@
 from collections import defaultdict
 import numpy as np
-import matplotlib.pyplot as plt
-import networkx as nx
 
 '''
 	A SuffixArray concatenates all data into one big string
@@ -152,6 +150,9 @@ class SuffixArray(list):
 		return m.items()
 	
 	def plot(self, eps = 4):
+		
+		import matplotlib.pyplot as plt
+		import networkx as nx
 		eps = 2 ** eps
 		
 		G = nx.Graph()

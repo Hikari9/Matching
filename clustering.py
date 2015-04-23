@@ -210,18 +210,30 @@ def label_heirarchy(tree, verbose = True):
 	
 	return (label[id], list(zip(label, child)))
 
-# Cluster based on stem wording and word frequency
-def stem_cluster(data, mode = 10, length_at_least = 3, stemmer = None):
 
-	if stemmer == None:
-		from stemming import porter2
-		stemmer = porter2
+# Cluster based on stem wording and word frequency
+
+_default_stemmer = None
+
+def stem_cluster(data, mode = 10, length_at_least = 3):
+	global _default_stemmer
+	
+	# load default stemmer (nltk lemmatizer)
+	if _default_stemmer == None:
+		import nltk
+		if not nltk.download('wordnet'):
+			raise 'Error in downloading wordnet. Kindly download normally.'
+		from nltk.stem import WordNetLemmatizer
+		_default_stemmer = WordNetLemmatizer()
+		_default_stemmer.stem = _default_stemmer.lemmatize
+	
+	stemmer = _default_stemmer
 		
 
-	import main
+	import algoutils
 	from collections import defaultdict
 	
-	words = main.flatten(main.split(data, ' '))
+	words = algoutils.flatten(algoutils.split(data, ' '))
 	frequency = defaultdict(int)
 	for word in words:
 		frequency[word] += 1

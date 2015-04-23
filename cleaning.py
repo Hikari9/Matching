@@ -75,7 +75,7 @@ def remove_year(text):
 # 	SHORT n
 # ...
 def transform_abbreviations(filename):
-	from main import read
+	from algoutils import read
 	lines = map(str.strip, read(filename)) # read file first
 	
 	longline = '\n'.join(lines)
@@ -111,7 +111,7 @@ def transform_abbreviations(filename):
 # remove prefix from data in text file
 # all lines in text file are considered
 def remove_prefixes(filename):
-	from main import read
+	from algoutils import read
 	prefixes = read(filename) # read file first
 	
 	def transform(text):
@@ -127,7 +127,7 @@ def remove_prefixes(filename):
 
 # convert separators into slashes from data in text file
 def transform_separators(filename, delimiter = '/'):
-	from main import read
+	from algoutils import read
 	separators = read(filename) # read file first
 	
 	def transform(text):
@@ -180,7 +180,7 @@ def respeller(dictionary_file, length_at_least, edit_at_most, enable_cache = Tru
 		trie = _cached_dictionaries[dictionary_file]
 	else:
 		from suffix import Trie
-		from main import read
+		from algoutils import read
 		trie = Trie(map(str.strip, read(dictionary_file)))
 		_cached_dictionaries = trie
 		
