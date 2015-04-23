@@ -1,6 +1,5 @@
 # SECTION 1: file IO
 
-
 # read from a file and return a list of lines
 def read(filename):
 	ans = None
@@ -21,8 +20,13 @@ def write(data, filename = 'out.txt', verbose = False):
 	
 
 # acquire a list of approved words from a list of data
-import enchant
-def approved_words(list_of_data, length_at_least = 5, dictionary = enchant.Dict('en-US')):
+
+def approved_words(list_of_data, length_at_least = 5, dictionary = None):
+	
+	if dictionary == None:
+		import enchant
+		dictionary = enchant.Dict('en-US')
+	
 	approved = set()
 	for row in split(list_of_data, ' '):
 		for word in row:
@@ -45,9 +49,10 @@ def split(data, delimiters = '&/'):
 
 # flattens a list of lists into a single list
 def flatten(list_of_lists):
+	import numpy as np
 	result = []
 	for entry in list_of_lists:
-		if isinstance(entry, list):
+		if isinstance(entry, list) or isinstance(entry, np.ndarray):
 			result.extend(flatten(entry))
 		else:
 			result.append(entry)

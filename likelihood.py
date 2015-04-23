@@ -90,7 +90,7 @@ def copy_dataframe_cache(origin_data_frame, destination_data_frame):
 # vector with respect to the labels in the data frame
 def extract_features(data_frame, text):
 	df = data_frame
-	if text in df.vector_cache: 
+	if text in df.vector_cache:
 		vector = df.vector_cache[text]
 	else:
 		vector = df.vectorizer.transform([text]).toarray()[0]
