@@ -6,7 +6,12 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
 # cosine similarity
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import linear_kernel as cosine_similarity
+
+# note that we can use linear kernel because
+# vectors from text vectorizers are already normalized
+
+
 
 '''
 Likelihood Matrix
