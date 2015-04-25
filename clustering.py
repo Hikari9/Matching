@@ -3,10 +3,93 @@ from suffix import SuffixArray
 from edistance import *
 import numpy as np
 
+
+'''
+	
+	Algorithm: stem_cluster(data [, mode, length_at_least] )
+	
+		A clustering algorithm that bases from word frequency
+		and stem trimming/lemmatizing. The goal of the algorithm
+		is to reduce the data into a list of important words
+		that can be used for machine learning and analysis.
+
+	Parameters:
+
+	data
+		- string [...]
+		- a list of string data to cluster
+		- assumed to be already clean
+
+	mode
+		- int [0, INF)
+		- the allowed frequency that includes the word as
+		  part of the list
+
+	length_at_least
+		- int [0, INF)
+		- the minimum length that determines if a word
+		  can be part of the list
+
+'''
+
+stemmer = None
+
+def stem_cluster(data, mode = 10, length_at_least = 3):
+
+	global stemmer
+	
+	# load default stemmer (nltk lemmatizer)
+	if stemmer == None:
+
+
+		try: # import if corpus exists
+			from nltk.stem import WordNetLemmatizer
+
+		except: # download corpora if does not exist
+			import nltk
+			if not nltk.download():
+				raise Exception('Error in downloading wordnet. \
+								Please make sure you are connected to the network, \
+								or try downloading manually.')
+			from nltk.stem import WordNetLemmatizer
+
+		# cache the default stemmer
+		stemmer = WordNetLemmatizer()
+
+		# port the lemmatizer as the stemmer
+		stemmer.stem = stemmer.lemmatize
+
+	from algoutils import flatten, split
+	from collections import defaultdict
+	
+	# split data into words
+	words = flatten(split(data, ' '))
+
+	# collect frequency of individual words
+	frequency = defaultdict(int)
+	for word in words:
+		if len(word) >= length_at_least:
+			frequency[word] += 1
+	
+	# filter words by frequency
+	words = filter(lambda (word,freq): freq >= mode, frequency.items())
+	words = list(zip(*words)[0])
+	
+	# trim stems
+	stem_map = defaultdict(list)
+	stem = stemmer.stem
+	for word in words:
+		stem_map[stem(word)].append(word)
+	
+	# only return representative
+	# aka. the word with least length
+	return map(lambda rep: min(rep, key=len), stem_map.values())
+
+
 	
 '''
 	
-	Algorithm: recursive(data)
+	Algorithm: double_cluster(data)
 	
 	A recursive double-clustering algorithm that is dependent on
 	common substring length and pairwise Levenshtein (edit) distances.
@@ -22,42 +105,41 @@ import numpy as np
 	data
 		- string [...]
 		- a list of string data to cluster
-		
-	min_common
+
+	min_common (optional)
 		- float (0, INF)
 		- the minimum common substring length that
 		  would be considered to be 'similar'
 	
-	step
+	step (optional)
 		- float (0, INF)
 		- value for which min_common would increment
 		  when a next level of clustering is needed
 	
-	eps
+	eps (optional)
 		- float (0, 1]
 		- allowed median edit ratio for a cluster
 		  to be considered final
 	
-	leaf_size
+	leaf_size (optional)
 		- int [1, INF)
 		- the maximum leaf-cluster size
 		- threshold for when to calculate for
 		  brute force pairwise edit distances
 	
-	
-	algorithm
+	algorithm (optional)
 		- 'lattice' or 'dense'
 		- lattice: uses strict integer-based common
 			substring length clustering
 		- dense: uses density-based common
 			substring length clustering
 	
-	heirarchy
+	heirarchy (optional)
 		- boolean
 		- display clusters in a heirarchy or not
 		
-		
 '''
+
 def double_cluster(data, min_common = 3, step = 1, eps = 0.4, leaf_size = 60, algorithm = 'lattice', heirarchy = True):
 	
 	# immediately instantiate into suffix array for later
@@ -117,9 +199,9 @@ def dense_spanning(data, min_common = 8):
 	ind = spanning_tree(graph, len(data))
 	return [map(lambda i: data[i], row) for row in ind]
 	
-
+# filters noise based on actual features count
 def lattice_spanning(data, min_common = 10):
-	
+
 	if isinstance(data, SuffixArray):
 		suffix_array = data
 		data = suffix_array.data
@@ -144,13 +226,14 @@ def lattice_spanning(data, min_common = 10):
 	all = filter(lambda x: len(x) != 0, m)
 	return all
 				
-# O(nlogn) clustering
+# O(nlogn) clustering, maximum cost DATA spanning forest
 def spanning_forest(data, n_clusters = 2):
 	
 	graph = data.similarity_graph() if isinstance(data, SuffixArray) else SuffixArray(data).similarity_graph()
 	ind = spanning_tree(graph, len(data), n_clusters)
 	return [map(lambda i: data[i], row) for row in ind]
 
+# O(nlogn) clustering, maximum cost spanning forest
 def spanning_tree(graph, n, n_clusters = 1):
 
 	needed = n - n_clusters
@@ -181,15 +264,14 @@ def spanning_tree(graph, n, n_clusters = 1):
 		
 	return filter(lambda x: len(x) > 0, clusters)
 
+# assigns a representative for each subcluster
+# uses minimal pairwise Levenshtein distance
 
-# for debugging purposes
 depth = 0
-prev = 0
-	
-def label_heirarchy(tree, verbose = True):
+
+def test_label_heirarchy(tree, verbose = True):
 
 	global depth
-	global prev
 	depth += 1
 	
 	if not isinstance(tree, list):
@@ -207,46 +289,5 @@ def label_heirarchy(tree, verbose = True):
 	if verbose: print ('-' * depth) + '+ %s' % (label[id])
 	depth -= 1
 	
-	
 	return (label[id], list(zip(label, child)))
 
-
-# Cluster based on stem wording and word frequency
-
-_default_stemmer = None
-
-def stem_cluster(data, mode = 10, length_at_least = 3):
-	global _default_stemmer
-	
-	# load default stemmer (nltk lemmatizer)
-	if _default_stemmer == None:
-		import nltk
-		if not nltk.download('wordnet'):
-			raise 'Error in downloading wordnet. Kindly download normally.'
-		from nltk.stem import WordNetLemmatizer
-		_default_stemmer = WordNetLemmatizer()
-		_default_stemmer.stem = _default_stemmer.lemmatize
-	
-	stemmer = _default_stemmer
-		
-
-	import algoutils
-	from collections import defaultdict
-	
-	words = algoutils.flatten(algoutils.split(data, ' '))
-	frequency = defaultdict(int)
-	for word in words:
-		frequency[word] += 1
-	
-	words = filter(lambda (word,freq): freq >= mode and len(word) >= length_at_least, frequency.items())
-	words.sort(key=lambda pair: pair[1], reverse=True)
-	words = list(zip(*words)[0])
-	
-	stem_map = defaultdict(list)
-	stem = stemmer.stem
-	for word in words:
-		# special case
-		if word != 'THE' and word != 'YEAR':
-			stem_map[stem(word.lower()).upper()].append(word)
-	
-	return map(lambda rep: min(rep, key=len), stem_map.values())

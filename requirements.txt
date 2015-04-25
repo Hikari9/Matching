@@ -2,7 +2,7 @@ Python Requirements (through pip):
 	
 	1) pyenchant
 		- with AbiWord Enchant 
-	2) stemming
+	2) nltk
 	3) numpy
 	4) scipy
 	5) sklearn
