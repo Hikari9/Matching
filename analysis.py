@@ -5,6 +5,9 @@ import pandas as pd
 # text vectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
+# for nearest neighbor
+from sklearn.neighbors import NearestNeighbors
+
 # cosine similarity
 from sklearn.metrics.pairwise import linear_kernel as cosine_similarity
 
@@ -22,7 +25,7 @@ Likelihood Matrix
 	- nature of being a matrix allows chain multiplication
 '''
 
-class likelihood_matrix(object):
+class LikelihoodMatrix(object):
 
 	def __str__(self):
 		return str(self.dataframe)
@@ -34,7 +37,7 @@ class likelihood_matrix(object):
 	Constructor
 		- initializes a likelihood data frame based on row and column labels
 		- performs a content-based filtering technique using features
-		- vectorizer can be 'tfidf' or 'count', with 
+		- vectorizer can be 'tfidf' or 'count' 
 		- uses cosine similarity for label matching
 	'''
 	
@@ -43,7 +46,7 @@ class likelihood_matrix(object):
 		# start vectorizing
 		if vectorizer == 'tfidf':		vectorizer = TfidfVectorizer
 		elif vectorizer == 'count':		vectorizer = CountVectorizer
-		else:							raise "vectorizer should be 'tfidf' or 'count'"
+		else:							raise ValueError("vectorizer should be 'tfidf' or 'count'")
 		
 		vectorizer = vectorizer(analyzer='char', ngram_range=ngram_range)
 		
@@ -51,7 +54,7 @@ class likelihood_matrix(object):
 		unique_labels = list(set(rows).union(set(columns)))
 		features = vectorizer.fit_transform(unique_labels).toarray()
 		
-		# cache a mapping of label to corresponding vetor
+		# cache a mapping of label to corresponding vector
 		vector_cache = {label:vector for label, vector in zip(unique_labels, features)}
 		
 		# get all pairwise cosine similarity
@@ -279,3 +282,43 @@ class likelihood_matrix(object):
 	# for copy module
 	def __copy__(self):
 		return self.clone()
+
+'''
+Fast Likelihood Matrix
+	- a faster likelihood matrix
+	- bases on a single most likely match instead feature dot product
+	- uses cosine similarity for label matching
+	- uses KD tree/Ball tree for nearest neighbor
+'''
+
+class FastLikelihoodMatrix(LikelihoodMatrix):
+
+	'''
+	Constructor
+		- initializes a likelihood data frame based on row and column labels
+		- performs a content-based filtering technique using features
+		- vectorizer can be 'tfidf' or 'count'
+		- uses dict and cosine similarity for label matching
+		- uses KD tree/Ball tree for nearest neighbor
+	'''
+
+	def __init__(self, rows, columns, vectorizer='tfidf', ngram_range=(3,4), tree='auto'):
+
+		# start vectorizing
+		if vectorizer == 'tfidf':		vectorizer = TfidfVectorizer
+		elif vectorizer == 'count':		vectorizer = CountVectorizer
+		else:							raise ValueError("vectorizer should be 'tfidf' or 'count'")
+
+		vectorizer = vectorizer(analyzer='char', ngrame_range=ngrame_range)
+
+		# extract vectors
+		unique_labels = list(set(rows).union(set(columns)))
+		features = vectorizer.fit_transform(unique_labels).toarray()
+
+		# cache a mapping of label to corresponding vector
+		vector_cache = {label:vector for label, vector in zip(unique_labels, features)}
+
+		# build tree for nearest neighbor
+		# accepted: auto, ball_tree, kd_tree, brute
+		tree = NearestNeighbors(n_neighbors=1, algorithm=tree, metric='cosine')
+
