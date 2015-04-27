@@ -42,7 +42,7 @@ def stem_cluster(data, mode = 10, length_at_least = 3):
 	if stemmer == None:
 		
 		try: # import if corpus exists
-			from nltk.stem import stemming
+			from nltk.stem import WordNetLemmatizer
 
 		except: # download corpora if does not exist
 			import nltk
