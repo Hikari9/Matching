@@ -40,18 +40,17 @@ def stem_cluster(data, mode = 10, length_at_least = 3):
 	
 	# load default stemmer (nltk lemmatizer)
 	if stemmer == None:
-
-
+		
 		try: # import if corpus exists
-			from nltk.stem import WordNetLemmatizer
+			from nltk.stem import stemming
 
 		except: # download corpora if does not exist
 			import nltk
-			if not nltk.download():
+			if not nltk.download('wordnet'):
 				raise Exception('Error in downloading wordnet. \
 								Please make sure you are connected to the network, \
 								or try downloading manually.')
-			from nltk.stem import WordNetLemmatizer
+			from nltk.stem import EnglishStemmer
 
 		# cache the default stemmer
 		stemmer = WordNetLemmatizer()

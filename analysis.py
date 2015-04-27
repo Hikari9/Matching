@@ -149,7 +149,7 @@ class LikelihoodMatrix(object):
 	
 	def recommendation_score(self, row_text, column_text):
 		SV1 = self.similarity_vector(row_text, on_rows=True, with_labels=False, percentage=True)
-		SV2 = self.similarity_vector(column_text, on_rows=False, with_labels=False, percentage=False)
+		SV2 = self.similarity_vector(column_text, on_rows=False, with_labels=False, percentage=True)
 		LM = self.dataframe.values
 		return right(SV1).dot(LM).dot(SV2)[0]
 		
