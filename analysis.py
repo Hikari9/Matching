@@ -46,7 +46,7 @@ class LikelihoodMatrix(object):
 		- uses cosine similarity for label matching
 	'''
 	
-	def __init__(self, rows, columns, vectorizer='tfidf', ngram_range=(3,4), all_zeroes=False):
+	def __init__(self, rows, columns, vectorizer='tfidf', ngram_range=(3,4), all_zeroes=False, threshold=0.3):
 	
 		# start vectorizing
 		if vectorizer == 'tfidf':		vectorizer = TfidfVectorizer
@@ -83,6 +83,7 @@ class LikelihoodMatrix(object):
 		self.column_vectors = column_vectors
 		self.vectorizer = vectorizer
 		self.vector_cache = vector_cache
+		self.threshold = threshold
 		# self.row_similarity_cache = {}
 		# self.column_similarity_cache = {}
 	
@@ -185,6 +186,7 @@ class LikelihoodMatrix(object):
 		
 		# function to process parameter options
 		def process(similarities):
+			similarities = np.array(map(lambda x: x >= self.threshold, similarities))
 			if percentage and similarities.any():
 				similarities *= 100.0 / similarities.sum()
 			if with_labels:
@@ -277,6 +279,7 @@ class LikelihoodMatrix(object):
 		other.row_vectors = self.row_vectors
 		other.column_vectors = self.column_vectors
 		other.vectorizer = self.vectorizer
+		other.threshold = self.threshold
 		if copy_cache:
 			names = [
 				'vector_cache',
