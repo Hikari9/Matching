@@ -50,7 +50,7 @@ def stem_cluster(data, mode = 10, length_at_least = 3):
 				raise Exception('Error in downloading wordnet. \
 								Please make sure you are connected to the network, \
 								or try downloading manually.')
-			from nltk.stem import EnglishStemmer
+			from nltk.stem import WordNetLemmatizer
 
 		# cache the default stemmer
 		stemmer = WordNetLemmatizer()
