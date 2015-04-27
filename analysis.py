@@ -186,7 +186,7 @@ class LikelihoodMatrix(object):
 		
 		# function to process parameter options
 		def process(similarities):
-			similarities = np.array(map(lambda x: x >= self.threshold, similarities))
+			similarities = np.array(map(lambda x: x if x >= self.threshold else 0, similarities))
 			if percentage and similarities.any():
 				similarities *= 100.0 / similarities.sum()
 			if with_labels:
