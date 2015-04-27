@@ -232,18 +232,52 @@ industry_filters = [
 		(remove_ampersand = False)
 ]
 
+# filters to be used to clean job titles
+job_title_filters = [
+	to_uppercase,
+	remove_special_characters
+		(remove_ampersand = False),
+	remove_year,
+	transform_abbreviations
+		('data/job_title_abbreviations.txt'),
+	remove_duplicate_words,
+	remove_special_characters
+		(remove_ampersand = False)
+]
+
 # recursive clean method to be used
-# styles: course, industry
+# styles: course, industry, job title
 # respell if dictionary file is provided
-def clean(list_of_data, style, dictionary_file = None, length_at_least = 6, edit_at_most = 2, enable_cache = True):
+
+_filter_map = {
+	'course': course_filters,
+	'industry': industry_filters,
+	'job title': job_title_filters
+}
+
+_dictionary_map = {
+	'course': 'data/course_dictionary.txt',
+	'industry': 'data/industry_dictionary.txt',
+	'job title': 'data/job_title_dictionary.txt'
+}
+
+def clean(list_of_data, style, spell_check = True, dictionary_file = None, length_at_least = 6, edit_at_most = 2, enable_cache = True):
 	
-	if style == 'course': filters = course_filters
-	elif style == 'industry': filters = industry_filters
-	else: raise "Style must be 'course' or 'industry'"
+	try:
+		global _filter_map
+		filters = _filter_map[style]
+	except:
+		raise ValueError('Style must be ' + str(_filter_map.keys()) + ' or callable')
+	
+	if spell_check:
+		try:
+			if dictionary_file == None:
+				dictionary_file = _dictionary_map[style]
+			respell = respeller(dictionary_file, length_at_least, edit_at_most, enable_cache)
+		except:
+			dictionary_file = None
+
 		
-	if dictionary_file != None:
-		respell = respeller(dictionary_file, length_at_least, edit_at_most, enable_cache)
-	
 	def clean_single(data):
 		buffer = data
 		for filter in filters:
