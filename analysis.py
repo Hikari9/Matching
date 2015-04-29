@@ -84,6 +84,7 @@ class LikelihoodMatrix(object):
 		self.vectorizer = vectorizer
 		self.vector_cache = vector_cache
 		self.threshold = threshold
+		self.matrix = self.dataframe.values
 		# self.row_similarity_cache = {}
 		# self.column_similarity_cache = {}
 	
@@ -100,11 +101,11 @@ class LikelihoodMatrix(object):
 		similarities = self.similarity_vector(text, on_rows=not on_rows, with_labels=False, percentage=False)
 
 		if on_rows:
-			matrix = np.dot(self.dataframe.values, down(similarities))
+			matrix = np.dot(self.matrix, down(similarities))
 			matches = matrix.reshape(matrix.shape[0])
 
 		else:
-			matches = np.dot(right(similarities), self.dataframe.values)[0]
+			matches = np.dot(right(similarities), self.matrix)[0]
 
 		if percentage and matches.any():
 			matches *= 100. / matches.sum()
@@ -131,7 +132,16 @@ class LikelihoodMatrix(object):
 	'''
 	
 	def add_match(self, row_text, column_text):
-		self.dataframe += self.delta(row_text, column_text, with_labels=False)
+		# computing delta matrix is slow. Only compute for necessary labels
+		# self.dataframe += self.delta(row_text, column_text, with_labels=False)
+		SV1 = self.similarity_vector(row_text, on_rows=True, with_labels=False)
+		SV2 = self.similarity_vector(column_text, on_rows=False, with_labels=False)
+		cartesian_SV1 = filter(lambda item: item[1] >= self.threshold, enumerate(SV1))
+		cartesian_SV2 = filter(lambda item: item[1] >= self.threshold, enumerate(SV2))
+		matrix = self.matrix
+		for i, a in cartesian_SV1:
+			for j, b in cartesian_SV2:
+				matrix[i,j] += a * b
 
 	'''
 	Subtract Match
@@ -140,7 +150,16 @@ class LikelihoodMatrix(object):
 	'''
 
 	def subtract_match(self, row_text, column_text):
-		self.dataframe -= self.delta(row_text, column_text, with_labels=False)
+		# computing delta matrix is slow. Only compute for necessary labels
+		# self.dataframe += self.delta(row_text, column_text, with_labels=False)
+		SV1 = self.similarity_vector(row_text, on_rows=True, with_labels=False)
+		SV2 = self.similarity_vector(column_text, on_rows=False, with_labels=False)
+		cartesian_SV1 = filter(lambda item: item[1] >= self.threshold, enumerate(SV1))
+		cartesian_SV2 = filter(lambda item: item[1] >= self.threshold, enumerate(SV2))
+		matrix = self.matrix
+		for i, a in cartesian_SV1:
+			for j, b in cartesian_SV2:
+				matrix[i,j] -= a * b
 	
 	'''
 	Recommendation Score
@@ -149,9 +168,9 @@ class LikelihoodMatrix(object):
 	'''
 	
 	def recommendation_score(self, row_text, column_text):
-		SV1 = self.similarity_vector(row_text, on_rows=True, with_labels=False, percentage=True)
-		SV2 = self.similarity_vector(column_text, on_rows=False, with_labels=False, percentage=True)
-		LM = self.dataframe.values
+		SV1 = self.similarity_vector(row_text, on_rows=True, with_labels=False, percentage=False)
+		SV2 = self.similarity_vector(column_text, on_rows=False, with_labels=False, percentage=False)
+		LM = self.matrix
 		return right(SV1).dot(LM).dot(SV2)[0]
 		
 	'''
@@ -186,7 +205,6 @@ class LikelihoodMatrix(object):
 		
 		# function to process parameter options
 		def process(similarities):
-			similarities = np.array(map(lambda x: x if x >= self.threshold else 0, similarities))
 			if percentage and similarities.any():
 				similarities *= 100.0 / similarities.sum()
 			if with_labels:
@@ -213,9 +231,10 @@ class LikelihoodMatrix(object):
 		Y = self.row_vectors if on_rows else self.column_vectors
 		
 		cos_sim = cosine_similarity(X, Y)[0]
-		cache[text] = cos_sim
+		similarities = np.array(map(lambda x: x if x >= self.threshold else 0, cos_sim))
+		cache[text] = similarities
 
-		return process(cos_sim)
+		return process(similarities)
 		
 	
 	'''
@@ -280,6 +299,7 @@ class LikelihoodMatrix(object):
 		other.column_vectors = self.column_vectors
 		other.vectorizer = self.vectorizer
 		other.threshold = self.threshold
+		other.matrix = self.matrix
 		if copy_cache:
 			names = [
 				'vector_cache',
