@@ -202,6 +202,25 @@ def respeller(dictionary_file, length_at_least, edit_at_most, enable_cache = Tru
 	
 	return transform
 
+try: # import if corpus exists
+	from nltk.stem import WordNetLemmatizer
+
+except: # download corpora if does not exist
+	import nltk
+	if not nltk.download('wordnet'):
+		raise Exception('Error in downloading wordnet. \
+						Please make sure you are connected to the network, \
+						or try downloading manually.')
+	from nltk.stem import WordNetLemmatizer
+
+lemmatizer = WordNetLemmatizer()
+
+# lemmatize each word for a given text
+def lemmatize(text):
+	splitted = text.split(' ')
+	transformed = [str(lemmatizer.lemmatize(word.lower()).upper()) if len(word) > 3 else word for word in splitted]
+	return ' '.join(transformed)
+
 # filters to be used to clean courses
 course_filters = [
 	to_uppercase,
@@ -210,6 +229,7 @@ course_filters = [
 	remove_year,
 	remove_prefixes
 		('data/course_prefixes.txt'),
+	lemmatize,
 	transform_abbreviations
 		('data/course_abbreviations.txt'),
 	transform_separators
@@ -225,6 +245,7 @@ industry_filters = [
 	remove_special_characters
 		(remove_ampersand = False),
 	remove_year,
+	lemmatize,
 	transform_abbreviations
 		('data/industry_abbreviations.txt'),
 	remove_duplicate_words,
@@ -238,6 +259,7 @@ job_title_filters = [
 	remove_special_characters
 		(remove_ampersand = False),
 	remove_year,
+	lemmatize,
 	transform_abbreviations
 		('data/job_title_abbreviations.txt'),
 	remove_duplicate_words,
@@ -279,16 +301,20 @@ def clean(list_of_data, style, spell_check = True, dictionary_file = None, lengt
 
 		
 	def clean_single(data):
+		try:
+			data = data.encode('ascii', 'ignore')
+		except:
+			data = ''
 		buffer = data
-		for filter in filters:
-			buffer = filter(buffer)
+		for filter_ in filters:
+			buffer = filter_(buffer)
 		
 		# respell if dictionary file is provided
 		if dictionary_file != None:
 			buffer = respell(buffer)
 			# clean again
-			for filter in filters:
-				buffer = filter(buffer)
+			for filter_ in filters:
+				buffer = filter_(buffer)
 		
 		return buffer
 	
