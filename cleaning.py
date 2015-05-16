@@ -228,12 +228,12 @@ course_filters = [
 		(remove_ampersand = True),
 	remove_year,
 	remove_prefixes
-		('data_cleaning/course_prefixes.txt'),
+		('data/course_prefixes.txt'),
 	lemmatize,
 	transform_abbreviations
-		('data_cleaning/course_abbreviations.txt'),
+		('data/course_abbreviations.txt'),
 	transform_separators
-		('data_cleaning/course_prefixes.txt', delimiter = '/'),
+		('data/course_prefixes.txt', delimiter = '/'),
 	remove_duplicate_words,
 	remove_special_characters
 		(remove_ampersand = True)
@@ -247,7 +247,7 @@ industry_filters = [
 	remove_year,
 	lemmatize,
 	transform_abbreviations
-		('data_cleaning/industry_abbreviations.txt'),
+		('data/industry_abbreviations.txt'),
 	remove_duplicate_words,
 	remove_special_characters
 		(remove_ampersand = False)
@@ -261,7 +261,7 @@ job_title_filters = [
 	remove_year,
 	lemmatize,
 	transform_abbreviations
-		('data_cleaning/job_title_abbreviations.txt'),
+		('data/job_title_abbreviations.txt'),
 	remove_duplicate_words,
 	remove_special_characters
 		(remove_ampersand = False)
@@ -278,9 +278,9 @@ _filter_map = {
 }
 
 _dictionary_map = {
-	'course': 'data_cleaning/course_dictionary.txt',
-	'industry': 'data_cleaning/industry_dictionary.txt',
-	'job title': 'data_cleaning/job_title_dictionary.txt'
+	'course': 'data/course_dictionary.txt',
+	'industry': 'data/industry_dictionary.txt',
+	'job title': 'data/job_title_dictionary.txt'
 }
 
 D_TYPE_INDUSTRY = 'industry'
