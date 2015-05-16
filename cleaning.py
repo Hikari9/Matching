@@ -1,20 +1,26 @@
 import re
 
-# SECTION 1: individual filters
+'''
+Recursively replaces all occurences of to_find in text.
+It is possible that multiple occurences are not found
+	by the conventional python replace methods, and
+	that's what ths method is for.
+'''
 
-# recursively replaces all occurences
-# e.g. recursive_replace("& &", "&", "& & & & &")
-# returns "&"
 def recursive_replace(to_find, to_replace, text):
+	
 	buffer = text
 	while to_find in buffer:
 		buffer = re.sub(to_find, to_replace, buffer)
 	return buffer
 
+'''
+ Removes special characters and normalizes separators in a string.
+ One can have the option to remove ampersands or not.
+'''
 
-# removes special characters and normalizes separators in a string
 def remove_special_characters(remove_ampersand):
-	
+
 	to_trim = ['&', '/', 'IN', 'OF']
 	
 	def transform(text):
@@ -49,31 +55,39 @@ def remove_special_characters(remove_ampersand):
 	
 	return transform
 
-# transforms input to uppercase string
-def to_uppercase(text):
-	return str(text).upper()
+'''
+Transforms text to uppercase string.
+'''
 
-# removes '# ___ Y_R[S]'
-# e.g. 4th YEAR CS -> CS
+def to_uppercase(text):
+	return text.upper()
+
+'''
+Removes numbers prior to the keyphrase YEARS.
+e.g. 4th YEAR CS -> CS
+'''
+
 def remove_year(text):
 	return re.sub(r'[0-9].*Y.*[\S]]*[RS|R]', '', text).strip()
 
+'''
+Transforms abbreviations to the proper terms.
+Uses a text file for mapping.
 
-# transform abbreviations based a text file
-# format of strings in text file:
-#
-# LONG 1
-# 	SHORT 1
-# 	SHORT 2
-# 	...
-# 	SHORT n
-#
-# LONG 2
-# 	SHORT 1
-# 	SHORT 2
-# 	...
-# 	SHORT n
-# ...
+Format:
+LONG 1
+	SHORT 1
+	SHORT 2
+	...
+	SHORT n
+
+LONG 2
+	SHORT 1
+	SHORT 2
+	...
+	SHORT n
+'''
+
 def transform_abbreviations(filename):
 	from algoutils import read
 	lines = map(str.strip, read(filename)) # read file first
@@ -107,10 +121,12 @@ def transform_abbreviations(filename):
 	
 	return transform
 
+'''
+Removes prefixes based on data in a text file.
+'''
 
-# remove prefix from data in text file
-# all lines in text file are considered
 def remove_prefixes(filename):
+
 	from algoutils import read
 	prefixes = read(filename) # read file first
 	
@@ -124,9 +140,12 @@ def remove_prefixes(filename):
 	
 	return transform
 		
+'''
+Converts phrases into slashes as separators from given data in text file.
+'''
 
-# convert separators into slashes from data in text file
 def transform_separators(filename, delimiter = '/'):
+	
 	from algoutils import read
 	separators = read(filename) # read file first
 	
@@ -141,10 +160,12 @@ def transform_separators(filename, delimiter = '/'):
 	
 	return transform
 
+'''
+Removes duplicate words/expressions
+Note: words separated by slashes (/) will be checked
+	independently.
+'''
 
-# removes duplicate words/expressions
-# note: words separated by slashes (/)
-# will be independent from each other
 def remove_duplicate_words(text):
 	words = text.split(' ')
 	word_buffer = []
@@ -164,8 +185,9 @@ def remove_duplicate_words(text):
 	buffer = recursive_replace('/ /', '/', buffer)
 	return buffer
 
-# respells a given word based on a dictionary (a set or a list of words)
-# words are listed in a text file
+'''
+Respells a given word based on a dictionary text file.
+'''
 
 _cached_dictionaries = {}
 
@@ -183,8 +205,6 @@ def respeller(dictionary_file, length_at_least, edit_at_most, enable_cache = Tru
 		from algoutils import read
 		trie = Trie(map(str.strip, read(dictionary_file)))
 		_cached_dictionaries = trie
-		
-	
 		
 	# have a suffix trie map suggestions through edit distance
 	# to do: save or pickle trie
@@ -215,7 +235,10 @@ except: # download corpora if does not exist
 
 lemmatizer = WordNetLemmatizer()
 
-# lemmatize each word for a given text
+'''
+Lemmatizes each word for a given text.
+'''
+
 def lemmatize(text):
 	splitted = text.split(' ')
 	transformed = [str(lemmatizer.lemmatize(word.lower()).upper()) if len(word) > 3 else word for word in splitted]
@@ -287,12 +310,15 @@ D_TYPE_INDUSTRY = 'industry'
 D_TYPE_EDUC = 'course'
 D_TYPE_JOB_TITLE = 'job title'
 
+'''
+Main method for filtering and data cleaning.
+Style can be one of the the dictionary keys above.
+One can also opt to use D_TYPE constants.
+'''
+
 
 def clean(list_of_data, style, spell_check = True, dictionary_file = None, length_at_least = 6, edit_at_most = 2, enable_cache = True):
 	
-	# main method to filter
-	# style must be from the dictionaries above
-	# or one can opt to use D_TYPE_* constants
 	try:
 		global _filter_map
 		filters = _filter_map[style]

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 # text vectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # for nearest neighbor
 from sklearn.neighbors import NearestNeighbors
